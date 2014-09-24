@@ -23,8 +23,7 @@ from harvestingkit.utils import (format_arxiv_id,
                                  record_add_field,
                                  record_xml_output,
                                  create_record,
-                                 add_nations_field,
-                                 collapse_initials)
+                                 add_nations_field)
 from invenio.errorlib import register_exception
 from harvestingkit.scoap3utils import MissingFFTError
 from os import pardir
@@ -38,33 +37,6 @@ class NLMParser(JATSParser):
     def __init__(self, extract_nations=False):
         super(NLMParser, self).__init__()
         self.extract_nations = extract_nations
-
-    def _get_authors(self):
-        authors = []
-        for contrib in self.document.getElementsByTagName('contrib'):
-            surname = get_value_in_tag(contrib, 'surname')
-            given_names = get_value_in_tag(contrib, 'given-names')
-            given_names = collapse_initials(given_names)
-            if not surname or not given_names:
-                name = get_value_in_tag(contrib, 'string-name')
-            else:
-                name = '%s, %s' % (surname, given_names)
-            affiliations = []
-            corresp = []
-            for tag in contrib.getElementsByTagName('xref'):
-                if tag.getAttribute('ref-type') == 'aff':
-                    for rid in tag.getAttribute('rid').split():
-                        if rid.lower().startswith('a'):
-                            affiliations.append(rid)
-                        elif rid.lower().startswith('n'):
-                            corresp.append(rid)
-                elif tag.getAttribute('ref-type') == 'corresp' or\
-                        tag.getAttribute('ref-type') == 'author-notes':
-                    for rid in tag.getAttribute('rid').split():
-                        corresp.append(rid)
-            authors.append((name, affiliations, corresp))
-        return authors
-
 
     def get_references(self, xml):
         references = []
@@ -129,7 +101,7 @@ class NLMParser(JATSParser):
         arxiv = self.get_arxiv_id(xml)
         if arxiv:
             record_add_field(rec, '037', subfields=[('9', 'arXiv'), ('a', format_arxiv_id(arxiv))])
-        authors = self.get_authors(xml)
+        authors = super(NLMParser, self).get_authors(xml)
         first_author = True
         for author in authors:
             if author.get('surname'):
