@@ -123,7 +123,8 @@ class JATSParser(object):
             given_name = get_value_in_tag(author, "given-names")
             if given_name:
                 tmp["given_name"] = given_name.replace('\n', ' ')
-
+            if not surname and not given_name:
+                tmp["name"] = get_value_in_tag(author, "string-name")
             # It's not there
             # orcid = author.getAttribute('orcid').encode('utf-8')
             # if orcid:
