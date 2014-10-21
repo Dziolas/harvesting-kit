@@ -72,11 +72,9 @@ class JATSParser(object):
         for date in dates:
             if date.getAttribute('pub-type').encode('utf-8') == 'epub':
                 ret = get_value_in_tag(date, 'year')
-
         if not ret and dates:
-            return dates[0]
-        else:
-            return ret
+            ret = get_value_in_tag(dates[0], 'year')
+        return ret
 
     def get_publication_information(self, xml):
         jid = get_value_in_tag(xml, "journal-title")
@@ -214,8 +212,6 @@ class JATSParser(object):
                     if logger:
                         logger.info("Can't find copyright, trying different tag.")
                     print >> sys.stderr, "Can't find copyright, trying different tag."
-                else:
-                    return ret
             else:
                 ret = get_value_in_tag(xml, tag)
                 if not ret:
@@ -224,7 +220,8 @@ class JATSParser(object):
                     print >> sys.stderr, "Can't find copyright"
                 else:
                     ret = ret.split('.')
-                    return ret[0]
+                    ret = ret[0]
+            return ret
 
     def get_keywords(self, xml):
         try:
@@ -293,12 +290,20 @@ class JATSParser(object):
         references = []
         for reference in xml.getElementsByTagName("ref"):
             plain_text = None
-            try:
+            tag_type = None
+            if reference.getElementsByTagName('mixed-citation'):
+                tag_type = 'mixed-citation'
                 ref_type = reference.getElementsByTagName('mixed-citation')[0]
                 ref_type = ref_type.getAttribute('publication-type').encode('utf-8')
-            except:
+            elif reference.getElementsByTagName('citation'):
+                tag_type = 'citation'
                 ref_type = reference.getElementsByTagName('citation')[0]
                 ref_type = ref_type.getAttribute('publication-type').encode('utf-8')
+            elif reference.getElementsByTagName('element-citation'):
+                tag_type = 'element-citation'
+                ref_type = reference.getElementsByTagName('element-citation')[0]
+                ref_type = ref_type.getAttribute('publication-type').encode('utf-8')
+
             label = get_value_in_tag(reference, "label").strip('.')
             authors = []
             for author in reference.getElementsByTagName("name"):
@@ -324,14 +329,9 @@ class JATSParser(object):
             year = get_value_in_tag(reference, "year")
             ext_link = format_arxiv_id(self.get_ref_link(reference, "arxiv"))
             if ref_type != 'journal':
-                try:
-                    plain_text = get_value_in_tag(reference,
-                                                  "mixed-citation",
-                                                  tag_to_remove=self.tag_to_remove)
-                except:
-                    plain_text = get_value_in_tag(reference,
-                                                  "citation",
-                                                  tag_to_remove=self.tag_to_remove)
+                plain_text = get_value_in_tag(reference,
+                                              tag_type,
+                                              tag_to_remove=self.tag_to_remove)
             references.append((label, authors, doi,
                                issue, page, page_last,
                                title, volume, year,
