@@ -119,6 +119,8 @@ class JatsPackage(object):
             # tag with "contrib" subtags.
             if contrib.getElementsByTagName('contrib'):
                 continue
+            if contrib.getElementsByTagName('collab'):
+                continue
             if contrib.getAttribute('contrib-type') == 'author':
                 surname = get_value_in_tag(contrib, 'surname')
                 given_names = get_value_in_tag(contrib, 'given-names')
