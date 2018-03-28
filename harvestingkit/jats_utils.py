@@ -60,8 +60,11 @@ class JATSParser(object):
         ret = None
 
         for issn in issns:
-            if issn.getAttribute("pub-type").encode('utf-8') == 'epub':
-                ret = issn.getAttribute("pub-type").encode('utf-8')
+            if issn.getAttribute('date-type').encode('utf-8') == 'epub' or issn.getAttribute('pub-type').encode('utf-8') == 'epub':
+                if issn.getAttribute("pub-type").encode('utf-8'):
+                    ret = issn.getAttribute("pub-type").encode('utf-8')
+                else:
+                    ret = issn.getAttribute("date-type").encode('utf-8')
 
         if not ret and issns:
             ret = xml_to_text(issns[0])
@@ -72,7 +75,7 @@ class JATSParser(object):
         dates = xml.getElementsByTagName('pub-date')
         ret = None
         for date in dates:
-            if date.getAttribute('pub-type').encode('utf-8') == 'epub':
+            if date.getAttribute('date-type').encode('utf-8') == 'epub' or date.getAttribute('pub-type').encode('utf-8') == 'epub':
                 ret = get_value_in_tag(date, 'year')
 
         if not ret and dates:
